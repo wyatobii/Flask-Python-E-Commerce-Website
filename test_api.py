@@ -2,6 +2,17 @@ from cs50 import SQL
 from flask_session import Session
 from flask import Flask, render_template, redirect, request, session, jsonify
 from datetime import datetime
+from flask import request, jsonify
+from flask import request, session, redirect, url_for
+import logging
+from flask import Flask, session, request, redirect, render_template_string
+
+app = Flask(__name__)
+app.secret_key = "your_secret_key"
+
+logging.basicConfig(level=logging.DEBUG)
+
+
 
 # # Instantiate Flask object named app
 app = Flask(__name__)
@@ -269,3 +280,74 @@ def cart():
             totItems += shoppingCart[i]["SUM(qty)"]
     # Render shopping cart
     return render_template("cart.html", shoppingCart=shoppingCart, shopLen=shopLen, total=total, totItems=totItems, display=display, session=session)
+
+@app.route("/notes", methods=["POST"])
+def add_note():
+    note = request.form.get("note")
+    if note:
+        if "notes" not in session:
+            session["notes"] = []
+        session["notes"].append(note)
+        session.modified = True
+    return redirect("/mynotes")
+
+@app.route("/notes/edit/<int:index>", methods=["GET", "POST"])
+def edit_note(index):
+    if "notes" not in session or index >= len(session["notes"]):
+        return redirect("/mynotes")
+    if request.method == "POST":
+        new_text = request.form.get("note")
+        if new_text:
+            session["notes"][index] = new_text
+            session.modified = True
+        return redirect("/mynotes")
+    return render_template("edit_note.html", index=index, note=session["notes"][index])
+
+@app.route("/notes/delete/<int:index>", methods=["POST"])
+def delete_note(index):
+    if "notes" in session and 0 <= index < len(session["notes"]):
+        session["notes"].pop(index)
+        session.modified = True
+    return redirect("/mynotes")
+    ...
+@app.route("/noteviewer")
+def noteviewer():
+    return render_template("notes.html")
+
+@app.route("/mynotes", methods=["GET", "POST"])
+def mynotes():
+    if "notes" not in session:
+        session["notes"] = []
+
+    if request.method == "POST":
+        note = request.form.get("note")
+        if note:
+            session["notes"].append(note)
+            session.modified = True
+    return render_template("notes.html", notes=session["notes"])
+
+if __name__ == "__main__":
+    app.run(debug=True)
+
+@app.route("/delete_note/<int:index>", methods=["POST"])
+def delete_note(index):
+    if "notes" in session and 0 <= index < len(session["notes"]):
+        session["notes"].pop(index)
+        session.modified = True
+    return redirect(url_for('mynotes'))
+
+
+@app.route("/edit_note/<int:index>", methods=["GET", "POST"])
+def edit_note(index):
+    if "notes" not in session or index >= len(session["notes"]):
+        return redirect("/mynotes")
+    if request.method == "POST":
+        new_text = request.form.get("note")
+        session["notes"][index] = new_text
+        session.modified = True
+        return redirect("/mynotes")
+    return render_template("edit_note.html", index=index, note=session["notes"][index])
+
+
+
+

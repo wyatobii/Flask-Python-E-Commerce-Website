@@ -52,5 +52,20 @@ Sample Clothing Store - Home
       </div>
     </div>
   </main>
+  <h2>Your Notes</h2>
+<form action="/notes" method="post">
+    <input type="text" name="note" placeholder="Enter a note" required>
+    <button type="submit">Add Note</button>
+</form>
+
+<ul>
+    {% for note in notes %}
+        <li>
+            {{ note }}
+            <a href="/delete_note/{{ loop.index0 }}">Delete</a>
+        </li>
+    {% endfor %}
+</ul>
+
 
 {% endblock %}
